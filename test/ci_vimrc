@@ -3,6 +3,7 @@
 " then loads the plugin under test.
 
 set nocompatible
+set encoding=utf-8
 
 " Test directory — available to vader tests as g:ddg_test_dir
 let g:ddg_test_dir = expand('<sfile>:p:h')

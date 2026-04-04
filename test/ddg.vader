@@ -7,17 +7,20 @@
 
 " ----------------------------------------------------------------------------
 " Global setup: mock the browser with a capture script
+" Note: vader runs Before/Execute blocks in separate script contexts, so
+" shared state must use g: variables, not s: variables.
 " ----------------------------------------------------------------------------
 
 Before:
-  let s:tmpfile = tempname()
-  let $DDG_CAPTURE_FILE = s:tmpfile
+  let g:ddg_tmpfile = tempname()
+  let $DDG_CAPTURE_FILE = g:ddg_tmpfile
   let g:ddg_open_command = g:ddg_test_dir . '/capture_url.sh'
 
 After:
   unlet! g:ddg_open_command
   let $DDG_CAPTURE_FILE = ''
-  silent! call delete(s:tmpfile)
+  silent! call delete(g:ddg_tmpfile)
+  unlet! g:ddg_tmpfile
 
 " ----------------------------------------------------------------------------
 " ddg#URLEncode — pure encoding tests (no browser involved)
@@ -56,19 +59,19 @@ Execute (UTF-8 multibyte chars are byte-level percent-encoded):
 
 Execute (single word builds correct URL):
   call ddg#Search('vim')
-  AssertEqual 'https://duckduckgo.com/?q=vim', readfile(s:tmpfile)[0]
+  AssertEqual 'https://duckduckgo.com/?q=vim', readfile(g:ddg_tmpfile)[0]
 
 Execute (multiple words encode spaces as plus):
   call ddg#Search('hello world')
-  AssertEqual 'https://duckduckgo.com/?q=hello+world', readfile(s:tmpfile)[0]
+  AssertEqual 'https://duckduckgo.com/?q=hello+world', readfile(g:ddg_tmpfile)[0]
 
 Execute (leading and trailing whitespace is trimmed):
   call ddg#Search('  trimmed  ')
-  AssertEqual 'https://duckduckgo.com/?q=trimmed', readfile(s:tmpfile)[0]
+  AssertEqual 'https://duckduckgo.com/?q=trimmed', readfile(g:ddg_tmpfile)[0]
 
 Execute (special characters in query are encoded):
   call ddg#Search('a&b=c')
-  AssertEqual 'https://duckduckgo.com/?q=a%26b%3Dc', readfile(s:tmpfile)[0]
+  AssertEqual 'https://duckduckgo.com/?q=a%26b%3Dc', readfile(g:ddg_tmpfile)[0]
 
 Execute (empty query is rejected with an error):
   let v:errmsg = ''

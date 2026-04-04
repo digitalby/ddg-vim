@@ -15,7 +15,7 @@ set cpoptions&vim
 "   to a pure-Vimscript byte loop via str2list() (Vim 7.4.2122+).
 function! s:URLEncode(str) abort
   if has('python3')
-    return py3eval('__import__("urllib.parse").quote_plus(' . string(a:str) . ')')
+    return py3eval('__import__("urllib.parse", fromlist=["quote_plus"]).quote_plus(' . string(a:str) . ')')
   endif
   " str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
   " percent-encoding requires.

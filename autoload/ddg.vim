@@ -28,6 +28,30 @@ function! s:OpenBrowser(url) abort
   silent! call system(l:cmd . ' ' . shellescape(a:url))
 endfunction
 
+" s:CpToUTF8Pct({codepoint})
+"   Returns the percent-encoded UTF-8 byte sequence for a Unicode codepoint.
+"   e.g. 0xE9 (é) -> '%C3%A9', 0x65E5 (日) -> '%E6%97%A5'
+function! s:CpToUTF8Pct(cp) abort
+  if a:cp < 0x80
+    return printf('%%%02X', a:cp)
+  elseif a:cp < 0x800
+    return printf('%%%02X%%%02X',
+      \ 0xC0 + a:cp / 64,
+      \ 0x80 + a:cp % 64)
+  elseif a:cp < 0x10000
+    return printf('%%%02X%%%02X%%%02X',
+      \ 0xE0 + a:cp / 4096,
+      \ 0x80 + (a:cp / 64) % 64,
+      \ 0x80 + a:cp % 64)
+  else
+    return printf('%%%02X%%%02X%%%02X%%%02X',
+      \ 0xF0 + a:cp / 262144,
+      \ 0x80 + (a:cp / 4096) % 64,
+      \ 0x80 + (a:cp / 64) % 64,
+      \ 0x80 + a:cp % 64)
+  endif
+endfunction
+
 " ----------------------------------------------------------------------------
 " Public API
 " ----------------------------------------------------------------------------
@@ -35,23 +59,23 @@ endfunction
 " ddg#URLEncode({str})
 "   Percent-encodes {str} for use as a query-string value.
 "   Spaces become '+' (application/x-www-form-urlencoded).
-"   str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
-"   percent-encoding requires (Vim 7.4.2122+).
+"   str2list(str, 1) yields Unicode codepoints; s:CpToUTF8Pct converts each
+"   non-ASCII codepoint to its percent-encoded UTF-8 byte sequence.
 function! ddg#URLEncode(str) abort
   let l:result = ''
-  for l:b in str2list(a:str, 1)
-    if (l:b >= 65 && l:b <= 90)
-      \ || (l:b >= 97 && l:b <= 122)
-      \ || (l:b >= 48 && l:b <= 57)
-      \ || l:b == 45
-      \ || l:b == 95
-      \ || l:b == 46
-      \ || l:b == 126
-      let l:result .= nr2char(l:b)
-    elseif l:b == 32
+  for l:cp in str2list(a:str, 1)
+    if (l:cp >= 65 && l:cp <= 90)
+      \ || (l:cp >= 97 && l:cp <= 122)
+      \ || (l:cp >= 48 && l:cp <= 57)
+      \ || l:cp == 45
+      \ || l:cp == 95
+      \ || l:cp == 46
+      \ || l:cp == 126
+      let l:result .= nr2char(l:cp)
+    elseif l:cp == 32
       let l:result .= '+'
     else
-      let l:result .= printf('%%%02X', l:b)
+      let l:result .= s:CpToUTF8Pct(l:cp)
     endif
   endfor
   return l:result

@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/digitalby/ddg-vim/actions/workflows/ci.yml/badge.svg)](https://github.com/digitalby/ddg-vim/actions/workflows/ci.yml)
 
+![demo](assets/demo.gif)
+
 Search DuckDuckGo from Vim's command mode. No external dependencies, no
 configuration required.
 

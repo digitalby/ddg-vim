@@ -4,11 +4,15 @@
 "   vim -u test/ci_vimrc -N --not-a-term -c 'Vader! test/ddg.vader'
 "
 " Or via the CI workflow: push to main / open a PR.
+"
+" Non-ASCII strings are built with nr2char(codepoint, 1) rather than
+" written as literals so the tests are independent of the runner's locale
+" and the file's on-disk encoding.
 
 " ----------------------------------------------------------------------------
-" Global setup: mock the browser with a capture script
-" Note: vader runs Before/Execute blocks in separate script contexts, so
-" shared state must use g: variables, not s: variables.
+" Global setup: mock the browser with a capture script.
+" vader runs Before/Execute blocks in separate script contexts, so shared
+" state must use g: variables, not s: variables.
 " ----------------------------------------------------------------------------
 
 Before:
@@ -47,11 +51,53 @@ Execute (question mark is percent-encoded):
 Execute (equals sign is percent-encoded):
   AssertEqual 'a%3Db', ddg#URLEncode('a=b')
 
+Execute (plus sign is percent-encoded not treated as space):
+  AssertEqual '%2B', ddg#URLEncode('+')
+
+Execute (percent sign is percent-encoded):
+  AssertEqual '%25', ddg#URLEncode('%')
+
+Execute (multiple consecutive spaces each become plus):
+  AssertEqual 'a++b', ddg#URLEncode('a  b')
+
+Execute (tab is percent-encoded):
+  AssertEqual 'a%09b', ddg#URLEncode("a\tb")
+
 Execute (empty string returns empty string):
   AssertEqual '', ddg#URLEncode('')
 
-Execute (UTF-8 multibyte chars are byte-level percent-encoded):
-  AssertEqual 'caf%C3%A9', ddg#URLEncode('café')
+" Latin-1 supplemental: é = U+00E9, UTF-8 bytes C3 A9
+Execute (Latin-1 supplemental is byte-level percent-encoded):
+  AssertEqual 'caf%C3%A9', ddg#URLEncode('caf' . nr2char(0xE9, 1))
+
+" Cyrillic: привет
+" п=U+043F р=U+0440 и=U+0438 в=U+0432 е=U+0435 т=U+0442
+Execute (Cyrillic is percent-encoded correctly):
+  let l:privet = nr2char(0x43F, 1) . nr2char(0x440, 1) . nr2char(0x438, 1)
+    \ . nr2char(0x432, 1) . nr2char(0x435, 1) . nr2char(0x442, 1)
+  AssertEqual '%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82', ddg#URLEncode(l:privet)
+
+" CJK: 日本語 (Japanese)
+" 日=U+65E5  本=U+672C  語=U+8A9E
+Execute (CJK 3-byte chars are percent-encoded correctly):
+  let l:nihongo = nr2char(0x65E5, 1) . nr2char(0x672C, 1) . nr2char(0x8A9E, 1)
+  AssertEqual '%E6%97%A5%E6%9C%AC%E8%AA%9E', ddg#URLEncode(l:nihongo)
+
+" Emoji: 🔍 = U+1F50D, UTF-8 bytes F0 9F 94 8D
+Execute (emoji 4-byte chars are percent-encoded correctly):
+  AssertEqual '%F0%9F%94%8D', ddg#URLEncode(nr2char(0x1F50D, 1))
+
+" Arabic: بحث
+" ب=U+0628  ح=U+062D  ث=U+062B
+Execute (Arabic is percent-encoded correctly):
+  let l:bht = nr2char(0x628, 1) . nr2char(0x62D, 1) . nr2char(0x62B, 1)
+  AssertEqual '%D8%A8%D8%AD%D8%AB', ddg#URLEncode(l:bht)
+
+" Mixed ASCII + CJK: vim 教程
+" 教=U+6559  程=U+7A0B
+Execute (mixed ASCII and CJK):
+  let l:query = 'vim ' . nr2char(0x6559, 1) . nr2char(0x7A0B, 1)
+  AssertEqual 'vim+%E6%95%99%E7%A8%8B', ddg#URLEncode(l:query)
 
 " ----------------------------------------------------------------------------
 " ddg#Search — integration tests (browser mocked via capture script)
@@ -72,6 +118,13 @@ Execute (leading and trailing whitespace is trimmed):
 Execute (special characters in query are encoded):
   call ddg#Search('a&b=c')
   AssertEqual 'https://duckduckgo.com/?q=a%26b%3Dc', readfile(g:ddg_tmpfile)[0]
+
+Execute (Cyrillic search builds correct URL):
+  let l:privet = nr2char(0x43F, 1) . nr2char(0x440, 1) . nr2char(0x438, 1)
+    \ . nr2char(0x432, 1) . nr2char(0x435, 1) . nr2char(0x442, 1)
+  call ddg#Search(l:privet)
+  AssertEqual 'https://duckduckgo.com/?q=%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82',
+    \ readfile(g:ddg_tmpfile)[0]
 
 Execute (empty query is rejected with an error):
   let v:errmsg = ''

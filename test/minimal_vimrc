@@ -7,9 +7,11 @@
 
 set nocompatible
 
+" Test directory — available to vader tests as g:ddg_test_dir
+let g:ddg_test_dir = expand('<sfile>:p:h')
+
 " Resolve the plugin root relative to this file's location.
-let s:test_dir  = expand('<sfile>:p:h')
-let s:plugin_dir = fnamemodify(s:test_dir, ':h')
+let s:plugin_dir = fnamemodify(g:ddg_test_dir, ':h')
 
 execute 'set runtimepath+=' . fnameescape(s:plugin_dir)
 runtime! plugin/ddg.vim

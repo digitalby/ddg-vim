@@ -1,0 +1,18 @@
+" Vimrc used exclusively by the CI test runner.
+" Loads vader.vim from /tmp/vader.vim (cloned by the CI workflow),
+" then loads the plugin under test.
+
+set nocompatible
+
+" Test directory — available to vader tests as g:ddg_test_dir
+let g:ddg_test_dir = expand('<sfile>:p:h')
+
+" Plugin under test
+let s:plugin_dir = fnamemodify(g:ddg_test_dir, ':h')
+execute 'set runtimepath+=' . fnameescape(s:plugin_dir)
+
+" vader.vim — path matches what the CI workflow clones
+set runtimepath+=/tmp/vader.vim
+
+runtime! plugin/ddg.vim
+filetype plugin on

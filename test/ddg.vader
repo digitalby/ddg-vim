@@ -1,0 +1,76 @@
+" test/ddg.vader — vader.vim test suite for ddg.vim
+"
+" Run manually (from repo root):
+"   vim -u test/ci_vimrc -N --not-a-term -c 'Vader! test/ddg.vader'
+"
+" Or via the CI workflow: push to main / open a PR.
+
+" ----------------------------------------------------------------------------
+" Global setup: mock the browser with a capture script
+" ----------------------------------------------------------------------------
+
+Before:
+  let s:tmpfile = tempname()
+  let $DDG_CAPTURE_FILE = s:tmpfile
+  let g:ddg_open_command = g:ddg_test_dir . '/capture_url.sh'
+
+After:
+  unlet! g:ddg_open_command
+  let $DDG_CAPTURE_FILE = ''
+  silent! call delete(s:tmpfile)
+
+" ----------------------------------------------------------------------------
+" ddg#URLEncode — pure encoding tests (no browser involved)
+" ----------------------------------------------------------------------------
+
+Execute (spaces become plus signs):
+  AssertEqual 'hello+world', ddg#URLEncode('hello world')
+
+Execute (RFC 3986 unreserved chars pass through unchanged):
+  AssertEqual 'abc-_.~ABC123', ddg#URLEncode('abc-_.~ABC123')
+
+Execute (slash is percent-encoded):
+  AssertEqual 'foo%2Fbar', ddg#URLEncode('foo/bar')
+
+Execute (ampersand is percent-encoded):
+  AssertEqual 'a%26b', ddg#URLEncode('a&b')
+
+Execute (hash is percent-encoded):
+  AssertEqual '%23hash', ddg#URLEncode('#hash')
+
+Execute (question mark is percent-encoded):
+  AssertEqual 'what%3F', ddg#URLEncode('what?')
+
+Execute (equals sign is percent-encoded):
+  AssertEqual 'a%3Db', ddg#URLEncode('a=b')
+
+Execute (empty string returns empty string):
+  AssertEqual '', ddg#URLEncode('')
+
+Execute (UTF-8 multibyte chars are byte-level percent-encoded):
+  AssertEqual 'caf%C3%A9', ddg#URLEncode('café')
+
+" ----------------------------------------------------------------------------
+" ddg#Search — integration tests (browser mocked via capture script)
+" ----------------------------------------------------------------------------
+
+Execute (single word builds correct URL):
+  call ddg#Search('vim')
+  AssertEqual 'https://duckduckgo.com/?q=vim', readfile(s:tmpfile)[0]
+
+Execute (multiple words encode spaces as plus):
+  call ddg#Search('hello world')
+  AssertEqual 'https://duckduckgo.com/?q=hello+world', readfile(s:tmpfile)[0]
+
+Execute (leading and trailing whitespace is trimmed):
+  call ddg#Search('  trimmed  ')
+  AssertEqual 'https://duckduckgo.com/?q=trimmed', readfile(s:tmpfile)[0]
+
+Execute (special characters in query are encoded):
+  call ddg#Search('a&b=c')
+  AssertEqual 'https://duckduckgo.com/?q=a%26b%3Dc', readfile(s:tmpfile)[0]
+
+Execute (empty query is rejected with an error):
+  let v:errmsg = ''
+  silent! call ddg#Search('')
+  Assert v:errmsg =~# 'must not be empty', 'Expected error for empty query'

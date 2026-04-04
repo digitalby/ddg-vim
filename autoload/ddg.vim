@@ -8,31 +8,6 @@ set cpoptions&vim
 " Internal helpers
 " ----------------------------------------------------------------------------
 
-" s:URLEncode({str})
-"   Percent-encodes {str} for use as a query-string value.
-"   Spaces become '+' (application/x-www-form-urlencoded).
-"   str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
-"   percent-encoding requires (Vim 7.4.2122+).
-function! s:URLEncode(str) abort
-  let l:result = ''
-  for l:b in str2list(a:str, 1)
-    if (l:b >= 65 && l:b <= 90)
-      \ || (l:b >= 97 && l:b <= 122)
-      \ || (l:b >= 48 && l:b <= 57)
-      \ || l:b == 45
-      \ || l:b == 95
-      \ || l:b == 46
-      \ || l:b == 126
-      let l:result .= nr2char(l:b)
-    elseif l:b == 32
-      let l:result .= '+'
-    else
-      let l:result .= printf('%%%02X', l:b)
-    endif
-  endfor
-  return l:result
-endfunction
-
 " s:OpenBrowser({url})
 "   Opens {url} in the system default browser.
 "   Respects g:ddg_open_command if set; otherwise auto-detects the platform.
@@ -57,6 +32,31 @@ endfunction
 " Public API
 " ----------------------------------------------------------------------------
 
+" ddg#URLEncode({str})
+"   Percent-encodes {str} for use as a query-string value.
+"   Spaces become '+' (application/x-www-form-urlencoded).
+"   str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
+"   percent-encoding requires (Vim 7.4.2122+).
+function! ddg#URLEncode(str) abort
+  let l:result = ''
+  for l:b in str2list(a:str, 1)
+    if (l:b >= 65 && l:b <= 90)
+      \ || (l:b >= 97 && l:b <= 122)
+      \ || (l:b >= 48 && l:b <= 57)
+      \ || l:b == 45
+      \ || l:b == 95
+      \ || l:b == 46
+      \ || l:b == 126
+      let l:result .= nr2char(l:b)
+    elseif l:b == 32
+      let l:result .= '+'
+    else
+      let l:result .= printf('%%%02X', l:b)
+    endif
+  endfor
+  return l:result
+endfunction
+
 " ddg#Search({query})
 "   Validates {query}, builds the DuckDuckGo URL, and opens the browser.
 function! ddg#Search(query) abort
@@ -65,7 +65,7 @@ function! ddg#Search(query) abort
     echoerr 'ddg.vim: search query must not be empty'
     return
   endif
-  call s:OpenBrowser('https://duckduckgo.com/?q=' . s:URLEncode(l:query))
+  call s:OpenBrowser('https://duckduckgo.com/?q=' . ddg#URLEncode(l:query))
 endfunction
 
 " ddg#SearchWord()

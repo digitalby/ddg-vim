@@ -1,5 +1,7 @@
 # ddg.vim
 
+[![CI](https://github.com/digitalby/ddg-vim/actions/workflows/ci.yml/badge.svg)](https://github.com/digitalby/ddg-vim/actions/workflows/ci.yml)
+
 Search DuckDuckGo from Vim's command mode. No external dependencies, no
 configuration required.
 
@@ -74,23 +76,37 @@ xmap <Leader>s <Plug>(ddg-search-visual)
 
 ## Testing
 
-An isolated test environment is included. It loads only ddg.vim, leaving
-your `~/.vimrc` and `~/.vim` untouched.
+### Automated tests (CI)
+
+Tests run automatically on every push and pull request via GitHub Actions.
+The suite uses [vader.vim](https://github.com/junegunn/vader.vim) and covers
+URL encoding correctness and end-to-end search URL construction.
+
+To run the suite locally:
 
 ```sh
-chmod +x test/run.sh   # first time only
+# Clone vader.vim once
+git clone --depth 1 https://github.com/junegunn/vader.vim /tmp/vader.vim
+
+# Run all tests headlessly
+vim -u test/ci_vimrc -N --not-a-term -c 'Vader! test/ddg.vader'
+```
+
+### Manual smoke test
+
+An isolated environment is included that loads only ddg.vim, leaving your
+`~/.vimrc` and `~/.vim` untouched.
+
+```sh
 ./test/run.sh
 ```
 
-Inside Vim, try:
+Inside Vim:
 
 ```
 :DDG hello world
 :DDGWord
 ```
-
-Or open the plugin source, move your cursor over any word, and press
-`<Leader>dg`.
 
 ## Help
 

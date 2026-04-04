@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint (vint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install vint
+        run: pip install vim-vint
+      - name: Run vint
+        run: vint plugin/ddg.vim autoload/ddg.vim
+
+  test:
+    name: Test (vader)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          version: latest
+      - name: Clone vader.vim
+        run: git clone --depth 1 https://github.com/junegunn/vader.vim /tmp/vader.vim
+      - name: Make capture script executable
+        run: chmod +x test/capture_url.sh
+      - name: Run tests
+        run: vim -u test/ci_vimrc -N --not-a-term -c 'Vader! test/ddg.vader'

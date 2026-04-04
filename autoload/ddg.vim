@@ -1,5 +1,6 @@
 " autoload/ddg.vim - Implementation for ddg.vim
 " Loaded on first use; not at Vim startup.
+scriptencoding utf-8
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim

@@ -14,7 +14,6 @@ configuration required.
 ## Requirements
 
 - Vim 7.4.2122+ or any Neovim release
-- Python 3 support in Vim is optional but improves multi-byte URL encoding
 
 ## Installation
 

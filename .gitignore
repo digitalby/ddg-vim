@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Vim
+*.swp
+*.swo
+*~
+tags
+
+# Test scratch directories
+test/.vim/
+test/tmp/

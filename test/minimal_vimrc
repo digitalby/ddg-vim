@@ -1,0 +1,22 @@
+" Minimal vimrc for testing ddg.vim in isolation.
+" Does NOT load ~/.vimrc or any plugins from ~/.vim.
+"
+" Usage:
+"   vim -u test/minimal_vimrc        (from repo root)
+"   ./test/run.sh                    (convenience wrapper)
+
+set nocompatible
+
+" Resolve the plugin root relative to this file's location.
+let s:test_dir  = expand('<sfile>:p:h')
+let s:plugin_dir = fnamemodify(s:test_dir, ':h')
+
+execute 'set runtimepath+=' . fnameescape(s:plugin_dir)
+runtime! plugin/ddg.vim
+
+set noswapfile
+set laststatus=2
+set statusline=[ddg.vim\ test\ environment]
+
+echomsg 'ddg.vim loaded from: ' . s:plugin_dir
+echomsg 'Try: :DDG hello world   :DDGWord   <Leader>dg (normal/visual)'

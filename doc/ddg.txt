@@ -1,0 +1,88 @@
+*ddg.txt*  Search DuckDuckGo from Vim's command mode      *ddg* *ddg-vim*
+
+Author:   digitalby
+License:  MIT <https://opensource.org/licenses/MIT>
+Source:   https://github.com/digitalby/ddg-vim
+
+==============================================================================
+CONTENTS                                                       *ddg-contents*
+
+  1. Introduction ......................................... |ddg-intro|
+  2. Commands ............................................. |ddg-commands|
+  3. Mappings ............................................. |ddg-mappings|
+  4. Configuration ........................................ |ddg-config|
+
+==============================================================================
+1. Introduction                                                   *ddg-intro*
+
+ddg.vim lets you search DuckDuckGo without leaving Vim. Run a command to
+search any query, search the word under your cursor, or search a visual
+selection. Results open in your default browser.
+
+Requires Vim 7.4.2122+ (or any Neovim release). Python 3 support in Vim
+improves multi-byte URL encoding but is not required.
+
+==============================================================================
+2. Commands                                                    *ddg-commands*
+
+:DDG {query}                                                          *:DDG*
+  Search DuckDuckGo for {query}. Multiple words are accepted.
+
+  Examples: >
+    :DDG neovim lua api
+    :DDG what is a monad
+<
+
+:DDGWord                                                           *:DDGWord*
+  Search DuckDuckGo for the word under the cursor (|<cword>|).
+
+==============================================================================
+3. Mappings                                                    *ddg-mappings*
+
+The following mappings are defined by default. Set |g:ddg_no_mappings| to 1
+to disable them and define your own.
+
+  Normal mode ~
+    <Leader>dg    Search for the word under the cursor. (Same as |:DDGWord|.)
+
+  Visual mode ~
+    <Leader>dg    Search for the selected text.
+
+Use the <Plug> targets to define custom mappings: >
+
+  nmap <Leader>s <Plug>(ddg-search-word)
+  xmap <Leader>s <Plug>(ddg-search-visual)
+<
+Available <Plug> targets:
+
+  <Plug>(ddg-search-word)      Normal mode: search word under cursor.
+  <Plug>(ddg-search-visual)    Visual mode: search selected text.
+
+==============================================================================
+4. Configuration                                                  *ddg-config*
+
+g:ddg_open_command                                        *g:ddg_open_command*
+  Type: String. Default: '' (auto-detected).
+
+  Override the shell command used to open URLs. When empty, ddg.vim uses
+  'open' on macOS, 'xdg-open' on Linux, and 'cmd /c start ""' on Windows.
+
+  Examples: >
+    let g:ddg_open_command = 'firefox'
+    let g:ddg_open_command = 'open -a "Google Chrome"'
+<
+
+g:ddg_no_mappings                                          *g:ddg_no_mappings*
+  Type: Boolean. Default: 0.
+
+  Set to 1 to disable the default <Leader>dg mappings. You can then define
+  your own mappings using the |<Plug>| targets above.
+
+  Example: >
+    let g:ddg_no_mappings = 1
+    nmap <Leader>s <Plug>(ddg-search-word)
+    xmap <Leader>s <Plug>(ddg-search-visual)
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

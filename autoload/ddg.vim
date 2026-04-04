@@ -11,14 +11,9 @@ set cpoptions&vim
 " s:URLEncode({str})
 "   Percent-encodes {str} for use as a query-string value.
 "   Spaces become '+' (application/x-www-form-urlencoded).
-"   Uses Python 3 when available for correct multi-byte handling; falls back
-"   to a pure-Vimscript byte loop via str2list() (Vim 7.4.2122+).
+"   str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
+"   percent-encoding requires (Vim 7.4.2122+).
 function! s:URLEncode(str) abort
-  if has('python3')
-    return py3eval('__import__("urllib.parse", fromlist=["quote_plus"]).quote_plus(' . string(a:str) . ')')
-  endif
-  " str2list(str, 1) returns raw UTF-8 byte values, which is exactly what
-  " percent-encoding requires.
   let l:result = ''
   for l:b in str2list(a:str, 1)
     if (l:b >= 65 && l:b <= 90)
